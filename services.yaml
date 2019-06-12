@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-webapp
+
+spec:
+  # This defines which pods are going to be represented by this Service
+  # The service becomes a network endpoint for either orhter services
+  # or maybe external users to connect to (eg. browser)
+  selector:
+    app: webapp
+    # release: '0-5'
+    # mylabelname: webapp
+
+  ports:
+    - name: http
+      port: 80 # nginx Web Server
+      # targetPort: 80
+      nodePort: 30080 # Port must be > 30000 so it doesn't clash
+
+  # type: ClusterIP
+  # a ClusterIP service will only be available from inside the cluster
+  # (Not accessible by the browser) -> Private service
+  type: NodePort
+  # a NodePort exposes the service through the node to the outside world
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-queue
+spec:
+  selector:
+    app: queue
+  ports:
+    - name: http
+      port: 8161 # Apache MQ
+      nodePort: 30010
+
+    - name: endpoint
+      port: 61616
+      # nodePort: doesn't need to be exposed
+  type: NodePort
+  
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-position-tracker
+  
+spec:
+  selector:
+    app: position-tracker
+
+  ports:
+  - port: 8080
+    # nodePort: 30020
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-api-gateway
+spec:
+  selector:
+    app: api-gateway # referring to the pod label
+  ports:
+  - name: http
+    port: 8080
+    # nodePort: 30020
+  type: ClusterIP
